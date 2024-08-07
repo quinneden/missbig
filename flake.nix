@@ -75,11 +75,78 @@
           };
 
           users.users.root = {
+			shell = pkgs.zsh;
             openssh.authorizedKeys.keys = [
               "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHyYkP65U0LY+BmH8vro7jGd1BZA4WaKxTr1ygB6ynRx quinn@nixos-macmini"
             ];
             password = "cbroot";
           };
+
+		  security.sudo.wheelNeedsPassword = false;
+
+          environment.systemPackages = with pkgs; [
+            git
+            gh
+            micro
+            eza
+            cachix
+            rustup
+            rustc
+            gcc
+            gnumake
+            cmake
+            openssl
+            pkg-config
+            bat
+            ripgrep
+            jq
+            fzf
+            pure-prompt
+          ];
+
+          programs.zsh = {
+            enable = true;
+            enableCompletion = true;
+            autosuggestions.enable = true;
+            syntaxHighlighting.enable = true;
+			shellAliases = {
+			  mi = "micro";
+			  fuck = "rm -rf";
+			  l = "eza -lah --group-directories-first";
+			};
+            ohMyZsh = {
+              enable = true;
+              plugins = ["fzf" "eza"];
+            };
+            shellInit = ''
+              zstyle ':completion:*' menu select
+              bindkey "^[[1;5C" forward-word
+              bindkey "^[[1;5D" backward-word
+              unsetopt BEEP
+              for f (~/.config/zsh/[^completions]**/*(N.)); do source $f; done
+              [[ $(type -w z) =~ 'function' ]] && alias cd='z' || true
+            '';
+            promptInit = ''
+              autoload -U promptinit; promptinit
+              prompt pure
+            '';
+          };
+
+          environment.sessionVariables = {
+            SHELL = "${pkgs.zsh}/bin/zsh";
+            LC_ALL = "en_US.UTF-8";
+            dotdir = "/etc/nixos";
+            EDITOR = "${pkgs.micro}/bin/micro";
+          };
+
+		  users.users.quinn = {
+		  	isNormalUser = true;
+		  	extraGroups = ["wheel" "networkmanager"];
+		  	shell = pkgs.zsh;
+            openssh.authorizedKeys.keys = [
+              "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHyYkP65U0LY+BmH8vro7jGd1BZA4WaKxTr1ygB6ynRx quinn@nixos-macmini"
+            ];
+		  };
 
           nixpkgs.hostPlatform = "x86_64-linux";
           powerManagement.cpuFreqGovernor = "ondemand";
